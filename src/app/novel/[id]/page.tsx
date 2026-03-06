@@ -147,6 +147,19 @@ export default function NovelDetailPage() {
       setChapters((prev) =>
         prev.map((c) => (c.id === id ? { ...c, status: "translating" as const } : c))
       );
+      // Poll until this chapter finishes translating
+      const poll = setInterval(async () => {
+        try {
+          const updated = await fetchChapters(novelId);
+          const chapter = updated.chapters.find((c) => c.id === id);
+          if (chapter && chapter.status !== "translating") {
+            setChapters(updated.chapters);
+            clearInterval(poll);
+          }
+        } catch {
+          clearInterval(poll);
+        }
+      }, 3000);
     } catch (e: any) {
       alert("Lỗi dịch lại chương: " + e.message);
     }

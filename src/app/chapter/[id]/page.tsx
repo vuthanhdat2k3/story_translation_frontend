@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { fetchChapterNavigation, startChapterTranslation } from "@/lib/api";
+import { fetchChapterNavigation, startChapterTranslation, retranslateChapter } from "@/lib/api";
 import { ChapterNavigation } from "@/types";
 import Reader from "@/components/Reader";
 
@@ -13,6 +13,7 @@ export default function ChapterPage() {
   const [data, setData] = useState<ChapterNavigation | null>(null);
   const [loading, setLoading] = useState(true);
   const [translating, setTranslating] = useState(false);
+  const [retranslating, setRetranslating] = useState(false);
   const [showOriginal, setShowOriginal] = useState(false);
 
   useEffect(() => {
@@ -31,26 +32,43 @@ export default function ChapterPage() {
     }
   };
 
+  const pollUntilDone = (setter: (v: boolean) => void) => {
+    const poll = setInterval(async () => {
+      try {
+        const nav = await fetchChapterNavigation(chapterId);
+        setData(nav);
+        if (nav.current.status !== "translating") {
+          clearInterval(poll);
+          setter(false);
+        }
+      } catch {
+        clearInterval(poll);
+        setter(false);
+      }
+    }, 3000);
+  };
+
   const handleTranslate = async () => {
     try {
       setTranslating(true);
       await startChapterTranslation(chapterId);
-      // Poll for completion
-      const poll = setInterval(async () => {
-        try {
-          const nav = await fetchChapterNavigation(chapterId);
-          setData(nav);
-          if (nav.current.status !== "translating") {
-            clearInterval(poll);
-            setTranslating(false);
-          }
-        } catch {
-          clearInterval(poll);
-          setTranslating(false);
-        }
-      }, 3000);
+      pollUntilDone(setTranslating);
     } catch {
       setTranslating(false);
+    }
+  };
+
+  const handleRetranslate = async () => {
+    if (!confirm("Dịch lại chương này? Bản dịch cũ sẽ bị xóa và thay bằng bản dịch mới.")) return;
+    try {
+      setRetranslating(true);
+      setShowOriginal(false);
+      await retranslateChapter(chapterId);
+      // Clear old translation immediately so user knows it's being replaced
+      setData((prev) => prev ? { ...prev, current: { ...prev.current, content_vi: null, status: "translating" as const } } : prev);
+      pollUntilDone(setRetranslating);
+    } catch {
+      setRetranslating(false);
     }
   };
 
@@ -92,13 +110,13 @@ export default function ChapterPage() {
         >
           <div>
             <p className="text-base font-bold mb-1" style={{ color: "var(--color-accent)" }}>
-              {translating ? "🔄 Đang dịch chương này..." : "📝 Chương chưa được dịch"}
+              {(translating || retranslating) ? "🔄 Đang dịch chương này..." : "📝 Chương chưa được dịch"}
             </p>
             <p className="text-sm font-medium" style={{ color: "var(--color-text-muted)" }}>
-              {translating ? "Gemini AI đang xử lý, vui lòng chờ" : "Bấm nút bên phải để bắt đầu"}
+              {(translating || retranslating) ? "Gemini AI đang xử lý, vui lòng chờ" : "Bấm nút bên phải để bắt đầu"}
             </p>
           </div>
-          {translating ? (
+          {(translating || retranslating) ? (
             <span className="text-2xl">⏳</span>
           ) : (
             <button
@@ -111,9 +129,9 @@ export default function ChapterPage() {
         </div>
       )}
 
-      {/* View toggle */}
+      {/* View toggle + retranslate */}
       {hasTranslation && (
-        <div className="flex justify-center mb-10">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
           <div className="inline-flex gap-2 p-1.5 rounded-2xl" style={{ background: "var(--color-bg-secondary)" }}>
             {[{ label: "🇻🇳 Bản dịch", orig: false }, { label: "🇨🇳 Nguyên bản", orig: true }].map(({ label, orig }) => {
               const active = showOriginal === orig;
@@ -133,6 +151,14 @@ export default function ChapterPage() {
               );
             })}
           </div>
+          <button
+            onClick={handleRetranslate}
+            disabled={retranslating}
+            className="px-4 py-2 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+            style={{ background: "var(--color-bg-secondary)", color: "var(--color-text-muted)" }}
+          >
+            {retranslating ? "🔄 Đang dịch lại..." : "🔁 Dịch lại"}
+          </button>
         </div>
       )}
 
