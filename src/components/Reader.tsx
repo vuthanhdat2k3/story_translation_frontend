@@ -18,6 +18,16 @@ export default function Reader({ content, chapterTitle, novelId, prevId, nextId 
   const tapCountRef = useRef(0);
   const lastTapTimeRef = useRef(0);
 
+  const sentenceBlocks = content
+    .split(/\r?\n+/)
+    .flatMap((paragraph) =>
+      paragraph
+        .trim()
+        .split(/(?<=[.!?…])\s+/)
+        .map((sentence) => sentence.trim())
+        .filter(Boolean)
+    );
+
   const handleScreenClick = (e: React.MouseEvent) => {
     const isMobile = window.innerWidth <= 768;
     if (!isMobile) return;
@@ -86,10 +96,18 @@ export default function Reader({ content, chapterTitle, novelId, prevId, nextId 
 
       {/* Content */}
       <article
-        className="max-w-4xl mx-auto px-4 whitespace-pre-wrap leading-[1.85] font-medium opacity-90 transition-all duration-300 text-[var(--color-text)] select-text"
+        className="max-w-4xl mx-auto px-4 leading-[1.85] font-medium opacity-90 transition-all duration-300 text-[var(--color-text)] select-text"
         style={{ fontSize: `${fontSize}px` }}
       >
-        {content}
+        {sentenceBlocks.length > 0 ? (
+          sentenceBlocks.map((sentence, index) => (
+            <p key={`${index}-${sentence.slice(0, 20)}`} className="mb-[1em]">
+              {sentence}
+            </p>
+          ))
+        ) : (
+          <p>{content}</p>
+        )}
       </article>
 
       {/* Navigation */}
