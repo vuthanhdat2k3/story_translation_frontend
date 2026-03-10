@@ -70,3 +70,13 @@ export interface TranslationStatus {
   translating_chapters: number;
   error_chapters: number;
 }
+
+export interface CrawlLatestChapterResponse {
+  message: string;
+  novel_id: number;
+  chapter_id: number;
+  chapter_number: number;
+  title: string;
+  created: boolean;
+  translation_started: boolean;
+}

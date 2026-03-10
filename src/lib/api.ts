@@ -59,6 +59,52 @@ export async function pasteChapters(novelId: number, payload: { text: string; au
   });
 }
 
+export async function crawlLatestChapter(
+  novelId: number,
+  payload?: { source_url?: string; auto_translate?: boolean }
+): Promise<{
+  message: string;
+  novel_id: number;
+  chapter_id: number;
+  chapter_number: number;
+  title: string;
+  created: boolean;
+  translation_started: boolean;
+}> {
+  return fetchAPI(`/api/novels/${novelId}/chapters/crawl-latest`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      source_url: payload?.source_url,
+      auto_translate: payload?.auto_translate ?? true,
+    }),
+  });
+}
+
+export async function crawlSpecificChapter(
+  novelId: number,
+  chapterNumber: number,
+  payload?: { source_url?: string; auto_translate?: boolean }
+): Promise<{
+  message: string;
+  novel_id: number;
+  chapter_id: number;
+  chapter_number: number;
+  title: string;
+  created: boolean;
+  translation_started: boolean;
+}> {
+  return fetchAPI(`/api/novels/${novelId}/chapters/crawl-specific`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chapter_number: chapterNumber,
+      source_url: payload?.source_url,
+      auto_translate: payload?.auto_translate ?? true,
+    }),
+  });
+}
+
 export async function deleteNovel(id: number): Promise<void> {
   await fetchAPI(`/api/novels/${id}`, { method: "DELETE" });
 }

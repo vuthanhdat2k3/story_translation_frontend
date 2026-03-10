@@ -16,6 +16,8 @@ import {
   pasteChapters,
   deleteChapter,
   retranslateChapter,
+  crawlLatestChapter,
+  crawlSpecificChapter,
 } from "@/lib/api";
 import { Novel, ChapterListItem, TranslationStatus, CharacterMap } from "@/types";
 import ChapterList from "@/components/ChapterList";
@@ -41,6 +43,9 @@ export default function NovelDetailPage() {
   const [pasteText, setPasteText] = useState("");
   const [autoTranslate, setAutoTranslate] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isCrawlingLatest, setIsCrawlingLatest] = useState(false);
+  const [crawlChapterNum, setCrawlChapterNum] = useState("");
+  const [isCrawlingSpecific, setIsCrawlingSpecific] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -106,6 +111,71 @@ export default function NovelDetailPage() {
       router.push("/");
     } catch {
       // handle error
+    }
+  };
+
+  const handleCrawlLatest = async () => {
+    setIsCrawlingLatest(true);
+    try {
+      const result = await crawlLatestChapter(novelId, { auto_translate: true });
+      await loadData();
+
+      alert(
+        `${result.created ? "Da them" : "Da cap nhat"} chuong ${result.chapter_number}. ` +
+          `${result.translation_started ? "Da bat dau dich." : ""}`
+      );
+
+      const poll = setInterval(async () => {
+        try {
+          const updated = await fetchChapters(novelId);
+          const chapter = updated.chapters.find((c) => c.id === result.chapter_id);
+          setChapters(updated.chapters);
+          if (chapter && chapter.status !== "translating") {
+            clearInterval(poll);
+          }
+        } catch {
+          clearInterval(poll);
+        }
+      }, 3000);
+    } catch (e: any) {
+      alert("Loi crawl chuong moi nhat: " + e.message);
+    } finally {
+      setIsCrawlingLatest(false);
+    }
+  };
+
+  const handleCrawlSpecific = async () => {
+    const num = Number(crawlChapterNum);
+    if (!Number.isInteger(num) || num < 1) {
+      alert("Vui long nhap so chuong hop le.");
+      return;
+    }
+    setIsCrawlingSpecific(true);
+    try {
+      const result = await crawlSpecificChapter(novelId, num, { auto_translate: true });
+      await loadData();
+      alert(
+        `${result.created ? "Da them" : "Da cap nhat"} chuong ${result.chapter_number}. ` +
+          `${result.translation_started ? "Da bat dau dich." : ""}`
+      );
+      setCrawlChapterNum("");
+
+      const poll = setInterval(async () => {
+        try {
+          const updated = await fetchChapters(novelId);
+          const chapter = updated.chapters.find((c) => c.id === result.chapter_id);
+          setChapters(updated.chapters);
+          if (chapter && chapter.status !== "translating") {
+            clearInterval(poll);
+          }
+        } catch {
+          clearInterval(poll);
+        }
+      }, 3000);
+    } catch (e: any) {
+      alert("Loi crawl chuong: " + e.message);
+    } finally {
+      setIsCrawlingSpecific(false);
     }
   };
 
@@ -265,6 +335,41 @@ export default function NovelDetailPage() {
                 {translating ? "⏳ Đang bắt đầu..." : "🤖 Dịch tất cả"}
               </button>
             )}
+            <button
+              id="crawl-latest-btn"
+              onClick={handleCrawlLatest}
+              disabled={isCrawlingLatest}
+              className="px-6 py-3 rounded-xl text-base font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+              style={{
+                background: "rgba(14,165,233,0.12)",
+                color: "#0284c7",
+                border: "1px solid rgba(14,165,233,0.3)",
+              }}
+            >
+              {isCrawlingLatest ? "Dang crawl..." : "Crawl chuong moi nhat"}
+            </button>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min={1}
+                value={crawlChapterNum}
+                onChange={(e) => setCrawlChapterNum(e.target.value)}
+                placeholder="So chuong"
+                className="w-24 px-3 py-3 rounded-xl text-sm font-medium bg-[var(--color-bg-secondary)] border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+              />
+              <button
+                onClick={handleCrawlSpecific}
+                disabled={isCrawlingSpecific || !crawlChapterNum}
+                className="px-4 py-3 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 whitespace-nowrap"
+                style={{
+                  background: "rgba(14,165,233,0.12)",
+                  color: "#0284c7",
+                  border: "1px solid rgba(14,165,233,0.3)",
+                }}
+              >
+                {isCrawlingSpecific ? "Dang crawl..." : "Crawl"}
+              </button>
+            </div>
             <button
               id="delete-novel-btn"
               onClick={handleDelete}
