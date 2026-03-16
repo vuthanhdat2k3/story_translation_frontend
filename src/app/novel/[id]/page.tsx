@@ -18,6 +18,8 @@ import {
   retranslateChapter,
   crawlLatestChapter,
   crawlSpecificChapter,
+  crawlChapterRange,
+  updateNovel,
 } from "@/lib/api";
 import { Novel, ChapterListItem, TranslationStatus, CharacterMap } from "@/types";
 import ChapterList from "@/components/ChapterList";
@@ -46,6 +48,13 @@ export default function NovelDetailPage() {
   const [isCrawlingLatest, setIsCrawlingLatest] = useState(false);
   const [crawlChapterNum, setCrawlChapterNum] = useState("");
   const [isCrawlingSpecific, setIsCrawlingSpecific] = useState(false);
+  const [crawlStartNum, setCrawlStartNum] = useState("");
+  const [crawlEndNum, setCrawlEndNum] = useState("");
+  const [isCrawlingRange, setIsCrawlingRange] = useState(false);
+  const [crawlSourceUrl, setCrawlSourceUrl] = useState("");
+  const [crawlPrefix, setCrawlPrefix] = useState("");
+  const [pagesPerChapter, setPagesPerChapter] = useState("2");
+  const [isSavingSourceUrl, setIsSavingSourceUrl] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -56,6 +65,9 @@ export default function NovelDetailPage() {
         fetchCharacterMaps(novelId).catch(() => ({ characters: [], total: 0 })),
       ]);
       setNovel(novelData);
+      setCrawlSourceUrl(novelData.source_url ?? "");
+      setCrawlPrefix(novelData.crawl_prefix ?? "");
+      setPagesPerChapter(String(novelData.pages_per_chapter || 2));
       setChapters(chaptersData.chapters);
       setStatus(statusData);
       setCharacters(charsData.characters);
@@ -117,7 +129,12 @@ export default function NovelDetailPage() {
   const handleCrawlLatest = async () => {
     setIsCrawlingLatest(true);
     try {
-      const result = await crawlLatestChapter(novelId, { auto_translate: true });
+      const result = await crawlLatestChapter(novelId, {
+        auto_translate: true,
+        source_url: crawlSourceUrl.trim() || undefined,
+        prefix: crawlPrefix.trim() || undefined,
+        pages_per_chapter: Number(pagesPerChapter) > 0 ? Number(pagesPerChapter) : 1,
+      });
       await loadData();
 
       alert(
@@ -152,7 +169,12 @@ export default function NovelDetailPage() {
     }
     setIsCrawlingSpecific(true);
     try {
-      const result = await crawlSpecificChapter(novelId, num, { auto_translate: true });
+      const result = await crawlSpecificChapter(novelId, num, {
+        auto_translate: true,
+        source_url: crawlSourceUrl.trim() || undefined,
+        prefix: crawlPrefix.trim() || undefined,
+        pages_per_chapter: Number(pagesPerChapter) > 0 ? Number(pagesPerChapter) : 1,
+      });
       await loadData();
       alert(
         `${result.created ? "Da them" : "Da cap nhat"} chuong ${result.chapter_number}. ` +
@@ -179,6 +201,46 @@ export default function NovelDetailPage() {
     }
   };
 
+  const handleCrawlRange = async () => {
+    const start = Number(crawlStartNum);
+    const end = Number(crawlEndNum);
+    if (!Number.isInteger(start) || !Number.isInteger(end) || start < 1 || end < 1 || start > end) {
+      alert("Vui long nhap khoang chuong hop le (tu <= den, va >= 1).");
+      return;
+    }
+
+    setIsCrawlingRange(true);
+    try {
+      const result = await crawlChapterRange(novelId, {
+        start_chapter: start,
+        end_chapter: end,
+        auto_translate: true,
+        source_url: crawlSourceUrl.trim() || undefined,
+        prefix: crawlPrefix.trim() || undefined,
+        pages_per_chapter: Number(pagesPerChapter) > 0 ? Number(pagesPerChapter) : 1,
+      });
+      await loadData();
+
+      const failedItems = result.results.filter((item) => !item.ok);
+      const failedPreview = failedItems
+        .slice(0, 3)
+        .map((item) => `chuong ${item.chapter_number}: ${item.error}`)
+        .join("\n");
+
+      alert(
+        `Da crawl xong ${result.start_chapter}-${result.end_chapter}. ` +
+          `Thanh cong: ${result.success_count}, that bai: ${result.failed_count}.` +
+          (failedPreview ? `\n\nLoi mau:\n${failedPreview}` : "")
+      );
+      setCrawlStartNum("");
+      setCrawlEndNum("");
+    } catch (e: any) {
+      alert("Loi crawl nhieu chuong: " + e.message);
+    } finally {
+      setIsCrawlingRange(false);
+    }
+  };
+
   const handleAddCharacter = async () => {
     if (!newCn.trim() || !newVi.trim()) return;
     try {
@@ -188,6 +250,27 @@ export default function NovelDetailPage() {
       setNewVi("");
     } catch {
       // handle error
+    }
+  };
+
+  const handleSaveCrawlSourceUrl = async () => {
+    if (!novel) return;
+    setIsSavingSourceUrl(true);
+    try {
+      const updated = await updateNovel(novelId, {
+        source_url: crawlSourceUrl.trim() || null,
+        crawl_prefix: crawlPrefix.trim() || null,
+        pages_per_chapter: Number(pagesPerChapter) > 0 ? Number(pagesPerChapter) : 1,
+      });
+      setNovel(updated);
+      setCrawlSourceUrl(updated.source_url ?? "");
+      setCrawlPrefix(updated.crawl_prefix ?? "");
+      setPagesPerChapter(String(updated.pages_per_chapter || 2));
+      alert("Da luu URL crawl cho tac pham.");
+    } catch (e: any) {
+      alert("Loi luu URL crawl: " + e.message);
+    } finally {
+      setIsSavingSourceUrl(false);
     }
   };
 
@@ -370,6 +453,36 @@ export default function NovelDetailPage() {
                 {isCrawlingSpecific ? "Dang crawl..." : "Crawl"}
               </button>
             </div>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min={1}
+                value={crawlStartNum}
+                onChange={(e) => setCrawlStartNum(e.target.value)}
+                placeholder="Tu"
+                className="w-20 px-3 py-3 rounded-xl text-sm font-medium bg-[var(--color-bg-secondary)] border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+              />
+              <input
+                type="number"
+                min={1}
+                value={crawlEndNum}
+                onChange={(e) => setCrawlEndNum(e.target.value)}
+                placeholder="Den"
+                className="w-20 px-3 py-3 rounded-xl text-sm font-medium bg-[var(--color-bg-secondary)] border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+              />
+              <button
+                onClick={handleCrawlRange}
+                disabled={isCrawlingRange || !crawlStartNum || !crawlEndNum}
+                className="px-4 py-3 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 whitespace-nowrap"
+                style={{
+                  background: "rgba(14,165,233,0.12)",
+                  color: "#0284c7",
+                  border: "1px solid rgba(14,165,233,0.3)",
+                }}
+              >
+                {isCrawlingRange ? "Dang crawl..." : "Crawl nhieu"}
+              </button>
+            </div>
             <button
               id="delete-novel-btn"
               onClick={handleDelete}
@@ -384,6 +497,59 @@ export default function NovelDetailPage() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Progress bar */}
+      <div
+        className="rounded-2xl p-6 mb-6 shadow-card"
+        style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
+      >
+        <div className="flex flex-col md:flex-row md:items-end gap-4">
+          <div className="flex-1">
+            <label className="block text-sm font-bold mb-2" style={{ color: "var(--color-text-secondary)" }}>
+              URL crawl của tác phẩm
+            </label>
+            <input
+              type="url"
+              value={crawlSourceUrl}
+              onChange={(e) => setCrawlSourceUrl(e.target.value)}
+              placeholder="https://www.novel543.com/..."
+              className="w-full px-4 py-3 rounded-xl text-sm font-medium bg-[var(--color-bg-secondary)] border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+              <input
+                type="text"
+                value={crawlPrefix}
+                onChange={(e) => setCrawlPrefix(e.target.value)}
+                placeholder="Prefix crawl, VD: 8002"
+                className="w-full px-4 py-3 rounded-xl text-sm font-medium bg-[var(--color-bg-secondary)] border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+              />
+              <input
+                type="number"
+                min={1}
+                value={pagesPerChapter}
+                onChange={(e) => setPagesPerChapter(e.target.value)}
+                placeholder="So trang / chapter"
+                className="w-full px-4 py-3 rounded-xl text-sm font-medium bg-[var(--color-bg-secondary)] border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+              />
+            </div>
+          </div>
+          <button
+            onClick={handleSaveCrawlSourceUrl}
+            disabled={isSavingSourceUrl}
+            className="px-5 py-3 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 whitespace-nowrap"
+            style={{
+              background: "rgba(14,165,233,0.12)",
+              color: "#0284c7",
+              border: "1px solid rgba(14,165,233,0.3)",
+            }}
+          >
+            {isSavingSourceUrl ? "Dang luu..." : "Luu URL crawl"}
+          </button>
+        </div>
+        <p className="text-xs mt-2" style={{ color: "var(--color-text-muted)" }}>
+          Nút crawl sẽ dùng URL, prefix và so trang/chapter theo tung truyen. Co the de trong URL/prefix de backend tu detect.
+        </p>
       </div>
 
       {/* Progress bar */}

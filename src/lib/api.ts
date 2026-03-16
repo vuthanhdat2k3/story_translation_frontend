@@ -36,9 +36,34 @@ export async function fetchNovel(id: number): Promise<Novel> {
   return fetchAPI<Novel>(`/api/novels/${id}`);
 }
 
-export async function createNovel(payload: { title: string; author: string; description?: string }): Promise<Novel> {
+export async function createNovel(payload: {
+  title: string;
+  author: string;
+  description?: string;
+  source_url?: string;
+  crawl_prefix?: string;
+  pages_per_chapter?: number;
+}): Promise<Novel> {
   return fetchAPI<Novel>("/api/novels", {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateNovel(
+  id: number,
+  payload: {
+    title?: string;
+    author?: string;
+    description?: string;
+    source_url?: string | null;
+    crawl_prefix?: string | null;
+    pages_per_chapter?: number;
+  }
+): Promise<Novel> {
+  return fetchAPI<Novel>(`/api/novels/${id}`, {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
@@ -61,7 +86,12 @@ export async function pasteChapters(novelId: number, payload: { text: string; au
 
 export async function crawlLatestChapter(
   novelId: number,
-  payload?: { source_url?: string; auto_translate?: boolean }
+  payload?: {
+    source_url?: string;
+    prefix?: string;
+    pages_per_chapter?: number;
+    auto_translate?: boolean;
+  }
 ): Promise<{
   message: string;
   novel_id: number;
@@ -76,6 +106,8 @@ export async function crawlLatestChapter(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       source_url: payload?.source_url,
+      prefix: payload?.prefix,
+      pages_per_chapter: payload?.pages_per_chapter,
       auto_translate: payload?.auto_translate ?? true,
     }),
   });
@@ -84,7 +116,12 @@ export async function crawlLatestChapter(
 export async function crawlSpecificChapter(
   novelId: number,
   chapterNumber: number,
-  payload?: { source_url?: string; auto_translate?: boolean }
+  payload?: {
+    source_url?: string;
+    prefix?: string;
+    pages_per_chapter?: number;
+    auto_translate?: boolean;
+  }
 ): Promise<{
   message: string;
   novel_id: number;
@@ -100,7 +137,50 @@ export async function crawlSpecificChapter(
     body: JSON.stringify({
       chapter_number: chapterNumber,
       source_url: payload?.source_url,
+      prefix: payload?.prefix,
+      pages_per_chapter: payload?.pages_per_chapter,
       auto_translate: payload?.auto_translate ?? true,
+    }),
+  });
+}
+
+export async function crawlChapterRange(
+  novelId: number,
+  payload: {
+    start_chapter: number;
+    end_chapter: number;
+    source_url?: string;
+    prefix?: string;
+    pages_per_chapter?: number;
+    auto_translate?: boolean;
+  }
+): Promise<{
+  message: string;
+  novel_id: number;
+  start_chapter: number;
+  end_chapter: number;
+  success_count: number;
+  failed_count: number;
+  translation_started: boolean;
+  results: Array<{
+    chapter_number: number;
+    ok: boolean;
+    chapter_id?: number;
+    created?: boolean;
+    title?: string;
+    error?: string;
+  }>;
+}> {
+  return fetchAPI(`/api/novels/${novelId}/chapters/crawl-range`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      start_chapter: payload.start_chapter,
+      end_chapter: payload.end_chapter,
+      source_url: payload.source_url,
+      prefix: payload.prefix,
+      pages_per_chapter: payload.pages_per_chapter,
+      auto_translate: payload.auto_translate ?? true,
     }),
   });
 }

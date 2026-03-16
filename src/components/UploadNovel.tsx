@@ -9,6 +9,9 @@ export default function CreateNovel() {
 
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [crawlPrefix, setCrawlPrefix] = useState("");
+  const [pagesPerChapter, setPagesPerChapter] = useState("2");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,7 +23,10 @@ export default function CreateNovel() {
       const payload = {
         title: title,
         author: author || "Unknown",
-        description: ""
+        description: "",
+        source_url: sourceUrl.trim() || undefined,
+        crawl_prefix: crawlPrefix.trim() || undefined,
+        pages_per_chapter: Number(pagesPerChapter) > 0 ? Number(pagesPerChapter) : 2,
       };
       const novel = await createNovel(payload);
       router.push(`/novel/${novel.id}`);
@@ -71,6 +77,48 @@ export default function CreateNovel() {
               placeholder="Vd: Phong Lăng Thiên Hạ"
               className="input-base text-lg font-medium p-6"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-widest mb-3 ml-2 opacity-70">
+              URL crawl mặc định
+            </label>
+            <input
+              type="url"
+              value={sourceUrl}
+              onChange={(e) => setSourceUrl(e.target.value)}
+              placeholder="https://www.novel543.com/..."
+              className="input-base text-lg font-medium p-6"
+            />
+            <p className="text-xs opacity-60 mt-2 ml-2">
+              URL này sẽ được dùng để crawl chương cho riêng tác phẩm này.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold uppercase tracking-widest mb-3 ml-2 opacity-70">
+                Prefix crawl
+              </label>
+              <input
+                type="text"
+                value={crawlPrefix}
+                onChange={(e) => setCrawlPrefix(e.target.value)}
+                placeholder="VD: 8002"
+                className="input-base text-lg font-medium p-6"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold uppercase tracking-widest mb-3 ml-2 opacity-70">
+                Số trang / chapter
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={pagesPerChapter}
+                onChange={(e) => setPagesPerChapter(e.target.value)}
+                placeholder="1 hoặc 2"
+                className="input-base text-lg font-medium p-6"
+              />
+            </div>
           </div>
         </div>
 

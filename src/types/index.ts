@@ -3,6 +3,9 @@ export interface Novel {
   title: string;
   author: string;
   description: string | null;
+  source_url: string | null;
+  crawl_prefix: string | null;
+  pages_per_chapter: number;
   status: "pending" | "translating" | "completed" | "error";
   total_chapters: number;
   translated_chapters: number;
