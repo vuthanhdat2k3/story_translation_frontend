@@ -353,7 +353,7 @@ export default function NovelDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto w-full">
         <div className="skeleton h-10 w-64 mb-4" />
         <div className="skeleton h-6 w-40 mb-8" />
         <div className="space-y-3">
@@ -386,7 +386,7 @@ export default function NovelDetailPage() {
     : 0;
 
   return (
-    <div className="max-w-4xl mx-auto animate-fade-in">
+    <div className="max-w-4xl mx-auto w-full animate-fade-in">
       {/* Back + header */}
       <div className="mb-8">
         <Link
@@ -399,7 +399,7 @@ export default function NovelDetailPage() {
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
             <h1
-              className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gradient-premium mb-3 leading-tight"
+              className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gradient-premium mb-3 leading-tight break-words"
             >
               {novel.title}
             </h1>
@@ -407,13 +407,13 @@ export default function NovelDetailPage() {
               ✍️ {novel.author}
             </p>
           </div>
-          <div className="flex gap-3 flex-wrap mt-2 sm:mt-0">
+          <div className="flex flex-col sm:flex-row gap-3 flex-wrap mt-4 sm:w-auto w-full">
             {novel.status !== "translating" && (
               <button
                 id="translate-btn"
                 onClick={handleTranslate}
                 disabled={translating}
-                className="px-6 py-3 rounded-xl text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 bg-gradient-premium shadow-card hover:shadow-hover hover:-translate-y-0.5"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 bg-gradient-premium shadow-card hover:shadow-hover hover:-translate-y-0.5 text-center"
               >
                 {translating ? "⏳ Đang bắt đầu..." : "🤖 Dịch tất cả"}
               </button>
@@ -422,7 +422,7 @@ export default function NovelDetailPage() {
               id="crawl-latest-btn"
               onClick={handleCrawlLatest}
               disabled={isCrawlingLatest}
-              className="px-6 py-3 rounded-xl text-base font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl text-base font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 text-center"
               style={{
                 background: "rgba(14,165,233,0.12)",
                 color: "#0284c7",
@@ -431,62 +431,64 @@ export default function NovelDetailPage() {
             >
               {isCrawlingLatest ? "Dang crawl..." : "Crawl chuong moi nhat"}
             </button>
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
               <input
                 type="number"
                 min={1}
                 value={crawlChapterNum}
                 onChange={(e) => setCrawlChapterNum(e.target.value)}
-                placeholder="So chuong"
-                className="w-24 px-3 py-3 rounded-xl text-sm font-medium bg-[var(--color-bg-secondary)] border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+                placeholder="Số chương"
+                className="w-full sm:w-28 px-4 py-3 rounded-xl text-sm font-medium bg-[var(--color-bg-secondary)] border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-sky-500/40 min-w-0"
               />
               <button
                 onClick={handleCrawlSpecific}
                 disabled={isCrawlingSpecific || !crawlChapterNum}
-                className="px-4 py-3 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 whitespace-nowrap"
+                className="w-full sm:w-auto px-4 py-3 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 whitespace-nowrap text-center"
                 style={{
                   background: "rgba(14,165,233,0.12)",
                   color: "#0284c7",
                   border: "1px solid rgba(14,165,233,0.3)",
                 }}
               >
-                {isCrawlingSpecific ? "Dang crawl..." : "Crawl"}
+                {isCrawlingSpecific ? "Đang crawl..." : "Crawl chương này"}
               </button>
             </div>
-            <div className="flex items-center gap-1.5">
-              <input
-                type="number"
-                min={1}
-                value={crawlStartNum}
-                onChange={(e) => setCrawlStartNum(e.target.value)}
-                placeholder="Tu"
-                className="w-20 px-3 py-3 rounded-xl text-sm font-medium bg-[var(--color-bg-secondary)] border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-sky-500/40"
-              />
-              <input
-                type="number"
-                min={1}
-                value={crawlEndNum}
-                onChange={(e) => setCrawlEndNum(e.target.value)}
-                placeholder="Den"
-                className="w-20 px-3 py-3 rounded-xl text-sm font-medium bg-[var(--color-bg-secondary)] border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-sky-500/40"
-              />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
+              <div className="flex gap-2 w-full sm:w-auto">
+                <input
+                  type="number"
+                  min={1}
+                  value={crawlStartNum}
+                  onChange={(e) => setCrawlStartNum(e.target.value)}
+                  placeholder="Từ"
+                  className="flex-1 sm:w-20 px-4 py-3 rounded-xl text-sm font-medium bg-[var(--color-bg-secondary)] border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-sky-500/40 min-w-0"
+                />
+                <input
+                  type="number"
+                  min={1}
+                  value={crawlEndNum}
+                  onChange={(e) => setCrawlEndNum(e.target.value)}
+                  placeholder="Đến"
+                  className="flex-1 sm:w-20 px-4 py-3 rounded-xl text-sm font-medium bg-[var(--color-bg-secondary)] border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-sky-500/40 min-w-0"
+                />
+              </div>
               <button
                 onClick={handleCrawlRange}
                 disabled={isCrawlingRange || !crawlStartNum || !crawlEndNum}
-                className="px-4 py-3 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 whitespace-nowrap"
+                className="w-full sm:w-auto px-4 py-3 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 whitespace-nowrap text-center"
                 style={{
                   background: "rgba(14,165,233,0.12)",
                   color: "#0284c7",
                   border: "1px solid rgba(14,165,233,0.3)",
                 }}
               >
-                {isCrawlingRange ? "Dang crawl..." : "Crawl nhieu"}
+                {isCrawlingRange ? "Đang crawl..." : "Crawl nhiều"}
               </button>
             </div>
             <button
               id="delete-novel-btn"
               onClick={handleDelete}
-              className="px-5 py-3 rounded-xl text-base font-bold transition-all hover:opacity-80 active:scale-95"
+              className="w-full sm:w-auto px-5 py-3 rounded-xl text-base font-bold transition-all hover:opacity-80 active:scale-95 text-center"
               style={{
                 background: "rgba(239,68,68,0.08)",
                 color: "var(--color-error)",
@@ -537,7 +539,7 @@ export default function NovelDetailPage() {
           <button
             onClick={handleSaveCrawlSourceUrl}
             disabled={isSavingSourceUrl}
-            className="px-5 py-3 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 whitespace-nowrap"
+            className="w-full md:w-auto px-5 py-3 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 whitespace-nowrap text-center"
             style={{
               background: "rgba(14,165,233,0.12)",
               color: "#0284c7",

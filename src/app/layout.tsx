@@ -24,7 +24,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased flex flex-col min-h-screen selection:bg-indigo-500/30">
+      <body className="antialiased flex flex-col min-h-screen overflow-x-hidden selection:bg-indigo-500/30">
         <Navbar />
         <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 flex flex-col relative z-0">
           {children}

@@ -165,7 +165,7 @@ export default function ChapterList({ chapters, novelId, onDeleteChapter, onRetr
         </label>
         <button
           onClick={() => setIsDescending((prev) => !prev)}
-          className="px-4 py-2.5 rounded-xl text-sm font-bold bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-indigo-500/50 transition-all whitespace-nowrap"
+          className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-sm font-bold bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-indigo-500/50 transition-all whitespace-nowrap"
           title="Đảo thứ tự chương"
         >
           {isDescending ? "⬇ Mới -> Cũ" : "⬆ Cũ -> Mới"}
@@ -183,30 +183,30 @@ export default function ChapterList({ chapters, novelId, onDeleteChapter, onRetr
         />
         <button
           type="submit"
-          className="px-4 py-2.5 rounded-xl text-sm font-bold bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all whitespace-nowrap"
+          className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-sm font-bold bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all whitespace-nowrap"
         >
           Đi tới chương
         </button>
       </form>
 
       <div className="glass-card rounded-2xl p-3 sm:p-4 border border-[var(--color-border)] flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full sm:w-auto">
           <button
             onClick={handleMarkAllRead}
-            className="px-4 py-2.5 rounded-xl text-sm font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-sm font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all text-center"
           >
             Danh dau tat ca da doc
           </button>
           <button
             onClick={handleClearReadHistory}
-            className="px-4 py-2.5 rounded-xl text-sm font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500/20 transition-all"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-sm font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500/20 transition-all text-center"
           >
             Xoa lich su da doc
           </button>
         </div>
         <button
           onClick={() => setShowUnreadOnly((prev) => !prev)}
-          className={`px-4 py-2.5 rounded-xl text-sm font-bold border transition-all ${showUnreadOnly ? "bg-amber-500/15 text-amber-600 border-amber-500/30" : "bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-indigo-500/50"}`}
+          className={`w-full sm:w-auto px-4 py-2.5 rounded-xl text-sm font-bold border transition-all text-center ${showUnreadOnly ? "bg-amber-500/15 text-amber-600 border-amber-500/30" : "bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-indigo-500/50"}`}
         >
           {showUnreadOnly ? "Dang loc: Chua doc" : "Loc chi chuong chua doc"}
         </button>

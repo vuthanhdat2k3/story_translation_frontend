@@ -56,12 +56,12 @@ export default function Reader({ content, chapterTitle, novelId, prevId, nextId 
   };
 
   return (
-    <div className="animate-fade-in pb-20 relative min-h-screen" onClick={handleScreenClick}>
+    <div className="animate-fade-in pb-20 relative min-h-screen w-full" onClick={handleScreenClick}>
       {/* Background glow */}
       <div className="absolute top-0 left-1/2 -z-10 -translate-x-1/2 w-[800px] h-[300px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none opacity-50" />
 
       {/* Toolbar */}
-      <div className="glass-card sticky top-20 sm:top-24 z-40 rounded-full px-3 sm:px-5 py-2.5 sm:py-3 mb-12 sm:mb-16 flex items-center justify-between gap-2 sm:gap-4 max-w-4xl mx-auto shadow-sm border border-white/10 transition-all duration-300 mx-4 sm:mx-auto">
+      <div className="glass-card sticky top-20 sm:top-24 z-40 rounded-full px-3 sm:px-5 py-2.5 sm:py-3 mb-12 sm:mb-16 flex items-center justify-between gap-2 sm:gap-4 max-w-4xl mx-4 sm:mx-auto shadow-sm border border-white/10 transition-all duration-300">
         <Link
           href={`/novel/${novelId}`}
           className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 hover:bg-indigo-500/10 hover:text-indigo-500 active:scale-95 whitespace-nowrap"
